@@ -88,3 +88,15 @@ end
     r = b[1]/a[1]
     @test all(b./a .≈ r)
 end
+
+@testset ExtendedTestSet "euclidean-barycenter" begin
+    X = [
+        0 1 0 1
+        0 0 1 1
+    ]
+    w = [0,0,1,0]; MOT.normalize!(w)
+    @test all(MOT.euclidean_barycenter(X, w) .== [0,1])
+
+    w = [0,0,1,1.]; MOT.normalize!(w)
+    @test all(MOT.euclidean_barycenter(X, w) .== [0.5, 1])
+end

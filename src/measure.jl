@@ -1,5 +1,5 @@
 # CODE STATUS: REVISED, TESTED
-
+import Base: copy
 abstract type AbstractMeasure{D} end
 
 """
@@ -23,8 +23,35 @@ mutable struct GridMeasure{D} <: AbstractMeasure{D}
     end
 end
 
-# TODO, MEDIUM, ENHANCEMENT
-# Support CloudMeasure to the same extent as GridMeasure, with refinement of the alhpas included.
+# TODO: test
+function copy(mu::GridMeasure{D}) where D
+    GridMeasure(mu.points, mu.weights, mu.gridshape)
+end
+
+"""
+    fine_to_coarse(mu::GridMeasure{D}, cellsize)
+
+Compute a coarse approximation of `mu` by combining 
+`cellsize × ... × cellsize` points together. 
+Return the coarser Measure `new_mu` and the partition `cells`,
+such that `sum(mu.weights[cells[i]]) == new_mu.weights[i]`.
+"""
+function fine_to_coarse(mu::GridMeasure{D}, cellsize) where D
+    cells, new_gridshape = get_cells(mu.gridshape, cellsize)
+    new_weights = [sum(mu.weights[cell]) for cell in cells]
+    # New points
+    xs = get_grid_nodes(mu.points, mu.gridshape)
+    new_xs = Vector{Float64}[]
+    for i in 1:D
+        cells_xi, _ = get_cells_1D(length(xs[i]), cellsize)
+        new_xi = [mean(xs[i], cell) for cell in cells_xi]
+        push!(new_xs, new_xi)
+    end
+    new_points = flat_grid(new_xs...)
+    new_mu = GridMeasure(new_points, new_weights, new_gridshape)
+    return new_mu, cells
+end
+
 """
     CloudMeasure{D} <: AbstractMeasure{D}
 
@@ -57,5 +84,24 @@ mutable struct CloudMeasure{D} <: AbstractMeasure{D}
         new{D}(points, weights, extents)
     end
 end
+
+# TODO: test
+function copy(mu::CloudMeasure{D}) where D
+    CloudMeasure(mu.points, mu.weights, mu.extents)
+end
+
+
+# TODO, MEDIUM, ENHANCEMENT
+# Support CloudMeasure to the same extent as GridMeasure, with refinement of the alhpas included.
+
+function fine_to_coarse(mu::CloudMeasure{D}, cellsize) where D
+    # Just some ideas here: CloudMeasure{D} should also have a 
+    # `shape` attribute signaling the number of squares in which
+    # we have divide the extent of a finer CloudMeasure to get some
+    # discretization. Then, if the CloudMeasure was not the result
+    # of this operation, `shape` would be `(-1, -1).`
+    error("not implemented yet.")
+end
+
 
 # TODO: Here also MultiScaleMeasure?

@@ -2,7 +2,7 @@
 # A lot of cleaning up needed
 
 import LinearAlgebra: mul!
-# TODO: MEDIUM, PERFORMANCE
+# TODO: LOW, PERFORMANCE
 # Benchmark `using MKLSparse` and see if it improves performance
 
 # TODO: maybe this to aux?
@@ -33,144 +33,25 @@ function sinkhorn!(u, v, μ, ν, K, KT, Niter)
     end
 end
 
-# # When there is some precomputed neighborhood (I0, J0)
-# function get_neigh_indices(c::Function, α, β, ε, X, Y, θ, I0, J0)
-#     (length(I0) == length(J0)) || error("previous neighborhoods must have same size")
-#     threshold = ε*log(θ)
-#     I = Int[]
-#     J = Int[]
-#     i = 0
-#     j = 0
-#     for k in eachindex(I0)
-#         i = I0[k]
-#         j = J0[k]
-#         if @views α[i] + β[j] - c(X[:,i], Y[:,j]) ≥ threshold
-#             push!(I, i)
-#             push!(J, j)
-#         end
-#     end
-#     return I, J
-# end
-
-# # When there's no precomputed neighborhood
-# function get_neigh_indices(c::Function, α, β, ε, X, Y, θ)
-#     threshold = ε*log(θ)
-#     I = Int[]
-#     J = Int[]
-#     for j in 1:size(Y, 2)
-#         for i in 1:size(X, 2)
-#             if @views α[i] + β[j] - c(X[:,i], Y[:,j]) ≥ threshold
-#                 push!(I, i)
-#                 push!(J, j)
-#             end
-#         end
-#     end
-#     return I, J
-# end
-
-# # When C is a matrix, there is some precomputed neighborhood (I0, J0)
-# function get_neigh_indices(C::AbstractMatrix, α, β, ε, θ, I0, J0)
-#     (length(I0) == length(J0)) || error("previous neighborhoods must have same size")
-#     threshold = ε*log(θ)
-#     I = Int[]
-#     J = Int[]
-#     i = 0
-#     j = 0
-#     for k in 1:length(I0)
-#         i = I0[k]
-#         j = J0[k]
-#         if @views α[i] + β[j] - C[i,j] ≥ threshold
-#             push!(I, i)
-#             push!(J, j)
-#         end
-#     end
-#     return I, J
-# end
-
-# # When C is a matrix, there's no precomputed neighborhood
-# function get_neigh_indices(C::AbstractMatrix, α, β, ε, θ)
-#     threshold = ε*log(θ)
-#     I = Int[]
-#     J = Int[]
-#     for j in eachindex(β)
-#         for i in eachindex(α)
-#             if @views α[i] + β[j] - C[i,j] ≥ threshold
-#                 push!(I, i)
-#                 push!(J, j)
-#             end
-#         end
-#     end
-#     return I, J
-# end
-
-
-# function get_stabilized_kernel(c::Function, α, β, ε, X, Y, I, J, μ, ν)
-#     V = Vector{Float64}(undef, length(I))
-#     i = 0
-#     j = 0
-#     for k in eachindex(V)
-#         i = I[k]
-#         j = J[k]
-#         V[k] = @views exp((α[i] + β[j] - c(X[:,i], Y[:,j]))/ε)*μ[i]*ν[j]
-#     end
-#     K = sparse(I, J, V, length(α), length(β))
-#     return K
-# end
-
-# # When C is a matrix
-# function get_stabilized_kernel(C::AbstractMatrix, α, β, ε, I, J, μ, ν)
-#     V = Vector{Float64}(undef, length(I))
-#     i = 0
-#     j = 0
-#     for k in eachindex(V)
-#         i = I[k]
-#         j = J[k]
-#         V[k] = @views exp((α[i] + β[j] - C[i,j])/ε)*μ[i]*ν[j]
-#     end
-#     K = sparse(I, J, V, length(α), length(β))
-#     return K
-# end
-
-# # When there is sparse plan P0
-# function get_stabilized_kernel_prev(c::Function, α, β, ε, X, Y, μ, ν, θ, P0)
-#     threshold = ε*log(θ)
-#     I = Int[]
-#     J = Int[]
-#     V = Float64[]
-#     #Cycle non-zero entries of previous, enlarged plan
-#     rows = rowvals(P0) 
-#     stab_cost = 0.0
-#     for j in 1:size(P0, 2)
-#         for r in nzrange(P0, j)
-#             i = rows[r]
-#             stab_cost = α[i] + β[j] - c(X[:,i], Y[:,j])
-#             if @views stab_cost ≥ threshold
-#                 push!(I, i)
-#                 push!(J, j)
-#                 push!(V, μ[i]*exp(stab_cost/ε)*ν[j])
-#             end
-#         end
-#     end
-#     K = sparse(I, J, V, length(μ), length(ν))
-#     return K
-# end
-
 # TODO, MIDDLE, PERFORMANCE
 # code `get_stabilized_kernel` when a matrix is passed. When handling relatively
 # big problems in DomDec it could be useful to have a sparse Sinkhorn.
 
 """
-    get_stabilized_kernel(c::Function, a, b, ε, X, Y, μ, ν, θ[, rowval0, colptr0])
+    get_stabilized_kernel(c::Function, a, b, ε, X, Y, μ, ν, θ[, colptr0, roval0])
 
 Compute a truncated, stabilized kernel, following Section 3.3 of
 https://arxiv.org/abs/1610.06519, using the dual variables `(a, b)`, the threshold `θ`
-and a previous estimate on the neighborhood given by `(rowval0, colptr0)`.
+and a previous estimate on the neighborhood given by `(colptr0, rowval0)`.
 These must be interpreted as the representation of a CSC sparse matrix, on a subset of
 whose entries the truncated kernel will lie.
 
-If `rowval0, colptr0` are not given, it is assumed that the all entries must be inspected.
+If `colptr0, rowval0` are not given, it is assumed that the all entries must be inspected.
 """
-function get_stabilized_kernel(c::Function, a, b, ε, X, Y, μ, ν, θ, rowval0, colptr0)
+function get_stabilized_kernel(c::Function, a, b, ε, X, Y, μ, ν, θ, colptr0, rowval0)
+    if θ == 0
+        return get_stabilized_kernel_zero_threshold(c, a, b, ε, X, Y, μ, ν, colptr0, rowval0)
+    end
     m = length(μ)
     n = length(ν)
     threshold = ε*log(θ)
@@ -199,10 +80,29 @@ function get_stabilized_kernel(c::Function, a, b, ε, X, Y, μ, ν, θ)
     # Iterator over the dense matrix
     m = length(μ)
     n = length(ν)
-    #rowval0 = Iterators.flatten(1:m for _ in 1:n)
+    # TODO, LOW, PERFORMANCE
+    # The following `rowval0` is a vector of size m×n. 
+    # An iterator running over `1:m` `n` times would more efficient (for large problems),
+    # but it is not implemented in default julia, and it is unclear
+    # if it is worth the effort. Consider at a later state.
+    colptr0 = collect(1:m:n*m+1)
     rowval0 = repeat(1:m, n)
-    colptr0 = 1:m:n*m+1
-    get_stabilized_kernel(c::Function, a, b, ε, X, Y, μ, ν, θ, rowval0, colptr0)
+    get_stabilized_kernel(c::Function, a, b, ε, X, Y, μ, ν, θ, colptr0, rowval0)
+end
+
+# Special case: for θ = 0 we can recycle rowval0, colptr0
+function get_stabilized_kernel_zero_threshold(c, a, b, ε, X, Y, μ, ν, colptr0, rowval0)
+    m = length(μ)
+    n = length(ν)
+    nzval = Vector{Float64}(undef, length(rowval0))
+    for j in 1:n
+        for r in colptr0[j]:colptr0[j+1]-1 # Indices of non-zero values in column j
+            i = rowval0[r]
+            log_entry = @views a[i] + b[j] - c(X[:,i], Y[:,j])
+            nzval[r] = μ[i]*exp(log_entry/ε)*ν[j]
+        end
+    end
+    return SparseMatrixCSC{Float64, Int}(m, n, colptr0, rowval0, nzval)
 end
 
 

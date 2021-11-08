@@ -16,7 +16,7 @@ julia> get_cells_1D(4, 2, 1)
 ([[1], [2, 3], [4]], (3,))
 ```
 """
-function get_cells_1D(N, cellSize, offset)
+function get_cells_1D(N, cellSize, offset = 0)
     cells = Vector{Int}[]
     if offset > 0
         push!(cells, 1:offset)

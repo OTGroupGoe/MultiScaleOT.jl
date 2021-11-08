@@ -95,3 +95,25 @@ Normalize the vector `a` so that it adds up to `mass`.
 Does not perform any check on the positivity of `a`.
 """
 normalize!(a, mass=1) = (a ./= (sum(a)/mass); nothing)
+
+""" 
+    mean(x, J)
+
+Mean of `x[J]`, non-allocating
+"""
+function mean(x, J)
+    m = zero(eltype(x))
+    for j in J
+        m += x[j]
+    end
+    return m/length(J)
+end
+
+# TODO: Make his function non-copy
+"""
+    euclidean_barycenter(X, w)
+
+Compute the euclidean barycenter of the columns of `X`
+with weights `w`
+"""
+euclidean_barycenter(X, w) = sum(X .* w', dims = 2)
