@@ -1,6 +1,5 @@
 # CODE STATUS: REVISED, TESTED
 
-# TODO, LOW: faster converting iterators to arrays?
 """
     get_cells_1D(N, cellSize, offset)
 

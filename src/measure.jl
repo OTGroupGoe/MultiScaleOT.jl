@@ -11,9 +11,9 @@ A measure supported on a `D`-dimensional grid. Its attributes are:
 * `gridshape::NTuple{D,Int}`: shape of the grid, i.e. (length of x1, length of x2,...)
 """
 mutable struct GridMeasure{D} <: AbstractMeasure{D}
-    points::Matrix{Float64}   # X, coordinates
-    weights::Vector{Float64}  # masses, μ
-    gridshape::NTuple{D, Int} # shapeX
+    points::Matrix{Float64}   # coordinates of the points
+    weights::Vector{Float64}  # masses
+    gridshape::NTuple{D, Int} # shape
 
     function GridMeasure(points, weights, gridshape::NTuple{D, Int}) where D
         (size(points, 1) == D) || error("Number of rows of points must equal D")

@@ -109,7 +109,6 @@ function mean(x, J)
     return m/length(J)
 end
 
-# TODO: Make his function non-copy
 """
     euclidean_barycenter(X, w)
 

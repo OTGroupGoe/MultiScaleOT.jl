@@ -11,7 +11,7 @@ iteratively into (at most) 2^D points
 """
 compute_multiscale_depth(mu) = maximum(Int.(ceil.(log2.(mu.gridshape))))+1
 
-# How to handle this for arbitrary measures not living on a grid?
+# TODO: How to handle this for arbitrary measures not living on a grid?
 
 """
     MultiScaleMeasure{<:AbstractMeasure}
@@ -29,17 +29,9 @@ end
 ```
 """
 mutable struct MultiScaleMeasure{M<:AbstractMeasure{D} where D} 
-#mutable struct MultiScaleMeasure{M}
-    # New structure
     depth::Int
     measures::Vector{M}
     refinements::Vector{Vector{Vector{Int}}}
-    # Old structure
-    # depth::Int
-    # meas::Vector{Vector{Float64}}
-    # Xs::Vector{Matrix{Float64}}
-    # refinement_partitions::Vector{Vector{Vector{Int}}}
-    # shapes::Vector{NTuple{D,Int}}
 
     function MultiScaleMeasure(depth, measures, refinements)
         M = eltype(measures)
@@ -49,7 +41,7 @@ mutable struct MultiScaleMeasure{M<:AbstractMeasure{D} where D}
 end
 
 # TODO, LOW, ECONOMY
-# Do we need to do one version of the MultiScaleMeasure(Mu)
+# Do we need to do one version of the function MultiScaleMeasure(Mu)
 # for each subtype of AbstractMeasure or one could fit all?
 """
     MultiScaleMeasure(mu[; depth])
