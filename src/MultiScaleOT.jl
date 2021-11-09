@@ -11,9 +11,9 @@ include("measure.jl")
 
 include("multiscale.jl")
 
-include("sinkhorn.jl")
+include("parameters.jl")
 
-include("schedule.jl")
+include("sinkhorn.jl")
 
 include("scores.jl")
 

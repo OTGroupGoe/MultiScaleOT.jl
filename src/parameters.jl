@@ -1,6 +1,20 @@
 using StructArrays
 
 """
+    DEFAULT_PARAMETERS
+
+Default parameters for the Sinkhorn routines
+"""
+const DEFAULT_PARAMETERS = (;
+    solver_eps = 1.0,
+    solver_max_error = 1e-6,
+    solver_max_error_rel = true,
+    solver_max_iter = 10000,
+    solver_verbose = true,
+    solver_truncation = 1e-15
+) 
+
+"""
     constant_schedule(value, N)
 
 Repeat `value` `N` times
@@ -145,6 +159,9 @@ julia> sinkhorn_schedule = make_schedule(
 (ε = 1, N = 32, θ = 1.0e-20, max_error = 1.0e-6)
 """
 function make_schedule(; nt...) 
+    # First step: add from DEFAULT_PARAMETERS the ones
+    # that might be missing
+    nt = (; DEFAULT_PARAMETERS..., nt...)
     schedule_length = -1
     # Check consistency of lengths
     needs_expansion = Symbol[]
