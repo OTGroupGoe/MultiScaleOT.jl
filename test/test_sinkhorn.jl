@@ -52,8 +52,7 @@ import Random
 end
 
 @testset ExtendedTestSet "get_stabilized_kernel, sinkhorn_stabilized!" begin
-
-    # We start with the same setup# We start with some setup
+    # We start with the same setup
     Random.seed!(0)
     M = 100
     N = 101
@@ -79,46 +78,48 @@ end
     # `get_stabilized_kernel` 
     K0 = exp.(-C./ε) .* (μ .* ν')
     rowval0 = repeat(1:M, N)
-    colptr0 = 1:M:N*M+1
+    colptr0 = collect(1:M:N*M+1)
     θ = 0
-    K = MOT.get_stabilized_kernel(c, a, b, ε, X, Y, μ, ν, θ, rowval0, colptr0)
+    K = MOT.get_stabilized_kernel(c, a, b, ε, X, Y, μ, ν, θ, colptr0, rowval0)
     @test all(K .≈ K0)
 
-    # But we actually would want a higher θ
+    # If we want some truncation we set θ>0
     θ = 1e-20
-    K = MOT.get_stabilized_kernel(c, a, b, ε, X, Y, μ, ν, θ, rowval0, colptr0)
-    KT = K'
+    K = MOT.get_stabilized_kernel(c, a, b, ε, X, Y, μ, ν, θ, colptr0, rowval0)
 
+    # Run the stabilized Sinkhorn routine
     status = MOT.sinkhorn_stabilized!(a, b, μ, ν, K, ε; max_error = 1e-6)
     @test status == 0
     @test MOT.PD_gap_sparse(a, b, K, c, X, Y, μ, ν, ε) < 1e-8
 
-    # Try to get a sparser kernel
+    # Try to get a sparser kernel: take the support of `K0` as initial support,
+    # and remove entries below threshold
     K0 = deepcopy(K)
-    droptol!(K0, 1e-20) # Remove entries below 1e-20
-    
-    # Take the support of `K0` as initial support
     rowval0 = K0.rowval
     colptr0 = K0.colptr;
     
     θ = 1e-15
-    K = MOT.get_stabilized_kernel(c, a, b, ε, X, Y, μ, ν, θ, rowval0, colptr0)
-    # We used the same epsilon so each entry of `K` must be either
-    # * Smaller than θ (before multiplication by μ[i]ν[j]), or
-    # * equal to that of K0
-    mask = K0 .≥ θ.*(μ.*ν')
-    @test all(K[mask] .≈ K0[mask])
-    @test all(K[.!mask] .== 0)
+    K = MOT.get_stabilized_kernel(c, a, b, ε, X, Y, μ, ν, θ, colptr0, rowval0)
 
-    # With a stabilized kernel we can solve entropic OT with 
-    # smaller epsilon.
+    # Now each entry of `K` must be either
+    # * Zero (if the corresponding entry in `K0` was smaller than `θ*μ[i]*ν[j]`), or
+    # * equal to that of K0 otherwise
+    mask = K0 .≥ θ.*(μ.*ν')
+    @test all(K[.!mask] .== 0)
+    @test all(K[mask] .≈ K0[mask])
+
+    # With a stabilized kernel we can solve entropic OT for very small epsilon.
     for _ in 1:5
+        # Construct stabilized kernel using the support of the previous solution
         ε /= 2
         rowval0 = K.rowval
         colptr0 = K.colptr;
-        K = MOT.get_stabilized_kernel(c, a, b, ε, X, Y, μ, ν, θ, rowval0, colptr0)
+        K = MOT.get_stabilized_kernel(c, a, b, ε, X, Y, μ, ν, θ, colptr0, rowval0)
+        # Solve the entropic problem
         status = MOT.sinkhorn_stabilized!(a, b, μ, ν, K, ε; max_error = 1e-6, max_iter = 100000)
+        # Check it didn't crash
         @test status != 2
+        # Check it actually converged
         @test MOT.PD_gap_sparse(a, b, K, c, X, Y, μ, ν, ε) < 1e-6
     end
 end
