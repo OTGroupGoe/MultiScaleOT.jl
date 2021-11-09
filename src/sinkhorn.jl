@@ -2,6 +2,9 @@
 # A lot of cleaning up needed
 
 import LinearAlgebra: mul!
+
+# TODO: MEDIUM, PERFORMANCE
+# Inbounds everywhere where it applies
 # TODO: LOW, PERFORMANCE
 # Benchmark `using MKLSparse` and see if it improves performance
 
@@ -205,6 +208,9 @@ function sinkhorn_stabilized!(a, b, μ, ν, K, ε;
             max_iter = 1000, max_error = 1e-8, 
             max_error_rel=true, verbose = true)
 
+    if max_error_rel
+        max_error *= sum(μ)
+    end
     # TODO, MEDIUM, DESIGN
     # Decide if the following arguments are important enough
     # to need to go on the optional argument list.
