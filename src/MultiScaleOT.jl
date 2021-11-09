@@ -13,6 +13,8 @@ include("multiscale.jl")
 
 include("sinkhorn.jl")
 
+include("schedule.jl")
+
 include("scores.jl")
 
 include("hierarchical-sinkhorn.jl")
