@@ -87,6 +87,7 @@ params_schedule = MOT.make_schedule(
 @time K, a, b, status = MOT.hierarchical_sinkhorn(mu, nu, c, params_schedule, 2)
 
 # Visualize displacement interpolation
+# TODO: Quite messy code right now
 function displacement_interpolation(P::SparseMatrixCSC, X, Y, shapeX, t)
     (0 ≤ t ≤ 1) || erorr("t must be in [0,1]")
     # Z = Matrix{Float64}(undef, size(X, 1), length(P.nzval))
