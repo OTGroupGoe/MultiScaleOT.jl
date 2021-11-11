@@ -1,5 +1,5 @@
 # CODE STATUS: REVISED, TESTED
-import Base: copy
+import Base: copy, ==
 abstract type AbstractMeasure{D} end
 
 """
@@ -26,6 +26,21 @@ end
 # TODO: test
 function copy(mu::GridMeasure{D}) where D
     GridMeasure(mu.points, mu.weights, mu.gridshape)
+end
+
+# TODO: test
+function npoints(mu::GridMeasure{D}) where D
+    length(mu.weights)
+end
+
+# TODO: test
+function mass(mu::GridMeasure{D}) where D
+    sum(mu.weights)
+end
+
+# TODO: test
+function ==(mu::GridMeasure, nu::GridMeasure)
+    (mu.points == nu.points) & (mu.weights == nu.weights) & (mu.gridshape == nu.gridshape)
 end
 
 """
@@ -90,6 +105,20 @@ function copy(mu::CloudMeasure{D}) where D
     CloudMeasure(mu.points, mu.weights, mu.extents)
 end
 
+# TODO: test
+function npoints(mu::CloudMeasure{D}) where D
+    length(mu.weights)
+end
+
+# TODO: test
+function mass(mu::CloudMeasure{D}) where D
+    sum(mu.weights)
+end
+
+# TODO: test
+function ==(mu::CloudMeasure, nu::CloudMeasure)
+    (mu.points == nu.points) & (mu.weights == nu.weights) & (mu.extents == nu.extents)
+end
 
 # TODO, MEDIUM, ENHANCEMENT
 # Support CloudMeasure to the same extent as GridMeasure, with refinement of the alhpas included.

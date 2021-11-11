@@ -82,17 +82,17 @@ end
     # Try for different cellsizes
     mu2, cells = MOT.fine_to_coarse(Mu, 2)
     mu2test = MOT.GridMeasure([1.5 3.5], [3., 7.], (2,))
-    @test (mu2test.points == mu2.points) & (mu2test.weights == mu2.weights) & (mu2test.gridshape == mu2.gridshape)
+    @test mu2 == mu2test
     @test all(mu2.weights[i] == sum(Mu.weights[cell]) for (i, cell) in enumerate(cells))
 
     mu2, cells = MOT.fine_to_coarse(Mu, 3)
     mu2test = MOT.GridMeasure([2 4], [6, 4], (2,))
-    @test (mu2test.points == mu2.points) & (mu2test.weights == mu2.weights) & (mu2test.gridshape == mu2.gridshape)
+    @test mu2 == mu2test
     @test all(mu2.weights[i] == sum(Mu.weights[cell]) for (i, cell) in enumerate(cells))
 
     mu2, cells = MOT.fine_to_coarse(Mu, 4)
     mu2test = MOT.GridMeasure(reshape([2.5],1,1), [10], (1,))
-    @test (mu2test.points == mu2.points) & (mu2test.weights == mu2.weights) & (mu2test.gridshape == mu2.gridshape)
+    @test mu2 == mu2test
     @test all(mu2.weights[i] == sum(Mu.weights[cell]) for (i, cell) in enumerate(cells))
 
     # 2D, expand setup and do the same
@@ -112,17 +112,17 @@ end
     # Test for different cellsizes
     mu2, cells = MOT.fine_to_coarse(Mu, 2)
     mu2test = MOT.GridMeasure([1.5 3.5 1.5 3.5; 1.5 1.5 3 3], [14, 22, 19, 23], (2,2))
-    @test (mu2test.points == mu2.points) & (mu2test.weights == mu2.weights) & (mu2test.gridshape == mu2.gridshape)
+    @test mu2 == mu2test
     @test all(mu2.weights[i] == sum(Mu.weights[cell]) for (i, cell) in enumerate(cells))
 
     mu2, cells = MOT.fine_to_coarse(Mu, 3)
     mu2test = MOT.GridMeasure([2 4; 2 2], [54, 24], (2,1))
-    @test (mu2test.points == mu2.points) & (mu2test.weights == mu2.weights) & (mu2test.gridshape == mu2.gridshape)
+    @test mu2 == mu2test
     @test all(mu2.weights[i] == sum(Mu.weights[cell]) for (i, cell) in enumerate(cells))
 
     mu2, cells = MOT.fine_to_coarse(Mu, 4)
     mu2test = MOT.GridMeasure(reshape([2.5, 2],:,1), [78], (1,1))
-    @test (mu2test.points == mu2.points) & (mu2test.weights == mu2.weights) & (mu2test.gridshape == mu2.gridshape)
+    @test mu2 == mu2test
     @test all(mu2.weights[i] == sum(Mu.weights[cell]) for (i, cell) in enumerate(cells))
 
     # TODO: 3D test?
