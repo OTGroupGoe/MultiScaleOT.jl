@@ -19,6 +19,33 @@ function isthere_nan_or_inf(v)
 end
 
 """
+    get_kernel!(C, a, b, μ, ν, ε)
+
+Compute inplace the Gibbs energy of matrix `C`, current duals `a` and `b` and scale it with marginals `μ`
+and `ν`.
+"""
+function get_kernel!(C, a, b, μ, ν, ε)
+    C .= μ .* exp.((a .+ b' .- C)./ε) .* ν'
+    nothing
+end
+
+get_kernel!(C, a, b, ε) = get_kernel!(C, a, b, 1, 1, ε)
+
+"""
+    get_kernel!(K, μ, ν, ε)
+
+Compute the Gibbs energy of matrix `C`, current duals `a` and `b` and scale it with marginals `μ`
+and `ν`.
+"""
+function get_kernel(C, a, b, μ, ν, ε) 
+    K = copy(C)
+    get_kernel!(K, a, b, μ, ν, ε)
+    return K
+end
+
+get_kernel(C, a, b, ε) = get_kernel(C, a, b, 1, 1, ε)
+
+"""
     sinkhorn!(u, v, μ, ν, K, KT, Niter)
 
 Run `Niter` iterations of the Sinkhorn algorithm inplace on the scaling factors
@@ -197,4 +224,177 @@ function sinkhorn_stabilized!(a, b, μ, ν, K, ε;
     a .+= ε.*log.(u)
     b .+= ε.*log.(v)
     return status
+end
+
+
+##############################################
+# logsinkhorn 
+##############################################
+
+"""
+    logsumexp(x, ε)
+
+Compute the softmin of `x` with regularization `ε`.
+"""
+function logsumexp(x, ε)
+    minx = minimum(x)
+    s = 0.0
+    @simd for xi in x
+        s += exp((minx - xi)/ε)
+    end
+    return minx - ε*log(s)
+end
+
+"""
+    logsumexp(x, b, ε)
+
+Compute the softmin of `x-b` with regularization `ε`.
+"""
+function logsumexp(x, b, ε)
+    minxb = minimum(x[i] - b[i] for i in eachindex(x))
+    #minxb = minimum(x) - maximum(b)
+    s = 0.0
+    @simd for i in eachindex(x)
+        s += exp((minxb - x[i] + b[i])/ε)
+    end
+    return minxb - ε*log(s)
+end
+
+# TODO: make this implementation non-copy
+# TODO: consider using LogExpFunctions.jl
+"""
+    logsumexp(A, ε, dims)
+
+Compute the softmin of `A` with regularization `ε` along
+the `dims` dimension.
+"""
+function logsumexp(A::Matrix, ε, dims)
+    # TODO: initialize yas undef
+    y = zeros(eltype(A), size(A, dims))
+    for (i,x) in enumerate(eachslice(A; dims))
+        y[i] = logsumexp(x, ε)
+    end
+    return y
+end
+
+"""
+    logsumexp!(y, A, b, ε, dims)
+
+Compute the softmin of `A - b` with regularization `ε` along
+the `dims` dimension, where `b` is subtracted also along the
+`dims` dimension. Modify the array `y`.
+"""
+function logsumexp!(y, A::Matrix, b, ε, dims)
+    for (i,x) in enumerate(eachslice(A; dims))
+        y[i] = logsumexp(x, b, ε)
+    end
+end
+
+"""
+    logsumexp(A, b, ε, dims)
+
+Compute the softmin of `A - b` with regularization `ε` along
+the `dims` dimension, where `b` is subtracted also along the
+`dims` dimension.
+"""
+function logsumexp(A::Matrix, b, ε, dims)
+    y = zeros(eltype(A), size(A, dims))
+    logsumexp!(y, A, b, ε, dims)
+    return y
+end
+
+"""
+    log_sinkhorn!(a, b, μ, ν, Ka, Kb, K, Niter)
+
+Run a log-stabilized implementation of the Sinkhorn algorithm 
+for `Niter` iterations. Mutate its arguments.
+"""
+function log_sinkhorn!(a, b, μ, ν, Ca, Cb, C, ε, Niter)
+    for _ in 1:Niter
+        # TODO: change to Peyre-Cuturi version 
+        # if this shows to be stable enough.
+        b .= ε.*log.(ν) .+ Ca
+        logsumexp!(Cb, C, b, ε, 1)
+        a .= ε.*log.(μ) .+ Cb
+        logsumexp!(Ca, C , a, ε, 2)
+    end
+end
+
+"""
+    get_missing_dual_potential(C, ϕ, ρ, ε, dim)
+
+Compute the conjugate potential of ϕ with regularization ε
+with marginal ρ. `dim` is the numeral of this potential. 
+
+# Examples
+If (α, β) are the dual potentials for `sinkhorn(C, μ, ν, ε)`, then
+`α == get_missing_dual_potential(C, β, ν, ε, 1)` and
+`β == get_missing_dual_potential(C, α, μ, ε, 2)`.
+"""
+function get_missing_dual_potential(C, ϕ, ρ, ε, dim)
+    dim = dim%2 + 1
+    ϕ = ϕ .+ ε.* log.(ρ)
+    return logsumexp(C, ϕ, ε, dim)
+end
+
+# TODO: implement this in the other sinkhorns.
+# BUT: not directly applicable if `C` is already modified to include 
+# the marginals.
+
+"""
+    log_sinkhorn!(a, b, μ, ν, C, ε; kwargs...)
+
+Run a log-stabilized implementation of the Sinkhorn algorithm
+on potentials `a` and `b` (first iteration updates `a`), with
+marginals `mu` and `nu`, cost matrix `C` and regularization 
+strength `ε`, until some maximum error or number of 
+iterations is achieved. 
+ 
+Optional arguments are: 
+
+* `max_iter`: Maximum number of iterations. 
+* `max_error`: Desired error. 
+* `max_error_rel`: Whether the `max_error` is relative to 
+  the mass of `μ`.
+* `verbose`: Whether convergence updates are desired. 
+"""
+function log_sinkhorn!(a, b, μ, ν, C, ε; 
+        max_iter = 1000, max_error = 1e-8, 
+        max_error_rel=true, verbose = true)
+
+    if max_error_rel
+        max_error *= sum(μ)
+    end
+    Ninner = 20 # number of inner iterations
+    n = 0
+
+    # TODO: change these for the non-allocating versions
+    Cb = logsumexp(C .- b', ε, 1)
+    a .= @. ε*log(μ) + Cb
+    Ca = logsumexp(C .- a, ε, 2)
+
+    # Compute init error
+    νK = exp.((b.- Ca)./ε)
+    current_error = l1(νK, ν)
+    # TODO: probably best to evaluate first the error
+    status = -1
+    while status == -1
+        log_sinkhorn!(a, b, μ, ν, Ca, Cb, C, ε, Ninner)
+        νK .= exp.((b.- Ca)./ε)
+        current_error = l1(νK, ν)
+        n += Ninner
+        if n ≥ max_iter
+            status = 1
+        end
+        if current_error < max_error
+            status = 0
+        end
+    end
+    if verbose & (status == 1)
+        println("warning: loginkhorn did not converge to accuracy ",error)
+    end
+    # Scale C 
+    get_kernel!(C, a, b, 1, 1, ε) 
+
+    return error
 end
