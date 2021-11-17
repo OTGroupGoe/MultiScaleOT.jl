@@ -391,7 +391,7 @@ function log_sinkhorn!(a, b, μ, ν, C, ε;
         end
     end
     if verbose & (status == 1)
-        println("warning: loginkhorn did not converge to accuracy ",error)
+        println("warning: loginkhorn did not converge to accuracy ", current_error)
     end
     # Scale C 
     get_kernel!(C, a, b, 1, 1, ε) 
