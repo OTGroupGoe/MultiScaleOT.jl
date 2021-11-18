@@ -10,3 +10,9 @@ function Base.show(io::IO, M::CloudMeasure{D}) where D
         print("\n × [", M.extents[i][1], ", ", M.extents[i][2], "]")
     end
 end
+
+function Base.show(io::IO, msm::MultiScaleMeasure{M}) where {M}
+    print(io, "MultiScaleMeasure with depth ",msm.depth,".\n")
+    print(io, "Finest level given by ")
+    show(io, msm.measures[end])
+end
