@@ -1,6 +1,6 @@
 module MultiScaleOT
 
-import Base: copy, ==
+import Base: copy, ==, show
 using SparseArrays
 import Interpolations
 import StructArrays: StructArray
@@ -45,5 +45,7 @@ export sinkhorn!,
 
 include("hierarchical-sinkhorn.jl")
 export hierarchical_sinkhorn
+
+include("display.jl")
 
 end # module
