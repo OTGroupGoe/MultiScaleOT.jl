@@ -1,5 +1,3 @@
-# CODE STATUS: REVISED, TESTED
-import Interpolations
 
 # TODO: Test
 """

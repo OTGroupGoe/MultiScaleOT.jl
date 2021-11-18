@@ -1,5 +1,6 @@
 # CODE STATUS: REVISED, UNTESTED
 
+# TODO: docstring
 function hierarchical_sinkhorn(mu::AbstractMeasure, nu::AbstractMeasure, c, params_schedule, layer0::Int = 3)
     i = layer0
     
@@ -39,7 +40,7 @@ function hierarchical_sinkhorn(mu::AbstractMeasure, nu::AbstractMeasure, c, para
         params = params_schedule[k]
 
         # Get solver parameters
-        ε = params.solver_eps
+        ε = params.epsilon
         θ = params.solver_truncation
         i = params.layer
         verbose = params.solver_verbose

@@ -1,4 +1,3 @@
-# CODE STATUS: REVISED, TESTED
 
 # lp distances
 

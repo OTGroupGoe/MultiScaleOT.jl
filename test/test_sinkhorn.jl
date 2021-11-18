@@ -2,6 +2,17 @@ import MultiScaleOT as MOT
 using SparseArrays
 import Random
 
+@testset ExtendedTestSet "isthere_nan_or_inf" begin
+    v = [1,2,3]
+    @test MOT.isthere_nan_or_inf(v) == false
+    v = [1,2,Inf]
+    @test MOT.isthere_nan_or_inf(v) == true
+    v = [1,2,-Inf]
+    @test MOT.isthere_nan_or_inf(v) == true
+    v = [1,2,NaN]
+    @test MOT.isthere_nan_or_inf(v) == true
+end
+
 @testset ExtendedTestSet "sinkhorn!" begin
     # We run the `sinkhorn!` routine for enough iterations and 
     # check that the primal-dual gap is approximately zero.

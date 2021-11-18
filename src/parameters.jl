@@ -1,4 +1,3 @@
-using StructArrays
 
 """
     DEFAULT_PARAMETERS
@@ -6,7 +5,7 @@ using StructArrays
 Default parameters for the Sinkhorn routines
 """
 const DEFAULT_PARAMETERS = (;
-    solver_eps = 1.0,
+    epsilon = 1.0,
     solver_max_error = 1e-6,
     solver_max_error_rel = true,
     solver_max_iter = 10000,
@@ -137,9 +136,9 @@ end
     make_schedule(; nt...) 
 
 Generate a `StructArray`` representing a schedule, this is,
-columns represent the schedule for each parameter, and rows 
-represent all parameters to be used at a given step of the  
-algorithm.
+columns represent the values a parameter, is taking on each
+step of the algorithm; conversely, rows represent the set of
+parameters to be used at a given stage of the algorithm.
 
 The elements in `nt` are arrays of singletons. In the later case
 they are repeated to match the length of the array ones.

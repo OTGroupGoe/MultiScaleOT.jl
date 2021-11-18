@@ -1,5 +1,12 @@
 # CODE STATUS: REVISED, TESTED
-import Base: copy, ==
+
+"""
+    AbstractMeasure{D}
+
+Type from which `GridMeasure{D}, CloudMeasure{D}` inherit. 
+It is left unexported to avoid potential conflicts with 
+`MeasureTheory.jl`, which has another type with the same name.
+"""
 abstract type AbstractMeasure{D} end
 
 """
@@ -131,6 +138,3 @@ function fine_to_coarse(mu::CloudMeasure{D}, cellsize) where D
     # of this operation, `shape` would be `(-1, -1).`
     error("not implemented yet.")
 end
-
-
-# TODO: Here also MultiScaleMeasure?

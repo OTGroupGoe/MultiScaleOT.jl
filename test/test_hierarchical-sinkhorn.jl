@@ -63,7 +63,7 @@
 
     params_schedule = MOT.make_schedule(
                     layer = layer_schedule,
-                    solver_eps = eps_schedule, 
+                    epsilon = eps_schedule, 
                     solver_truncation = θ_schedule,
                     solver_max_error = 1e-10,
                     solver_verbose = false,

@@ -1,4 +1,3 @@
-# CODE STATUS: REVISED, TESTED
 
 """
     flat_grid(xs...)

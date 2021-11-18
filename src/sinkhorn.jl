@@ -1,17 +1,19 @@
 # CODE STATUS: MOSTLY REVISED, tESTED
 # A lot of cleaning up needed
 
-import LinearAlgebra: mul!
-
 # TODO: MEDIUM, PERFORMANCE
 # Inbounds everywhere where it applies
 # TODO: LOW, PERFORMANCE
 # Benchmark `using MKLSparse` and see if it improves performance
 
-# TODO: maybe this to aux?
+"""
+    isthere_nan_or_inf(v)
+
+Check if there is `NaN` or `Inf` in iterable `v`
+"""
 function isthere_nan_or_inf(v)
     for vi in v
-        if (isnan(vi) | isinf(vi))
+        if isnan(vi) | isinf(vi)
             return true
         end
     end
@@ -110,11 +112,6 @@ function get_stabilized_kernel(c::Function, a, b, ε, X, Y, μ, ν, θ)
     # Iterator over the dense matrix
     m = length(μ)
     n = length(ν)
-    # TODO, LOW, PERFORMANCE
-    # The following `rowval0` is a vector of size m×n. 
-    # An iterator running over `1:m` `n` times would more efficient (for large problems),
-    # but it is not implemented in default julia, and it is unclear
-    # if it is worth the effort. Consider at a later state.
     colptr0 = collect(1:m:n*m+1)
     rowval0 = repeat(1:m, n)
     get_stabilized_kernel(c::Function, a, b, ε, X, Y, μ, ν, θ, colptr0, rowval0)
@@ -153,7 +150,6 @@ end
     sinkhorn_stabilized!(a, b, μ, ν, K, ε; kwargs...)
 
 Implement the stabilized Sinkhorn algorithm of https://arxiv.org/abs/1610.06519.
-
 """
 function sinkhorn_stabilized!(a, b, μ, ν, K, ε; 
             max_iter = 1000, max_error = 1e-8, 
