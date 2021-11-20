@@ -1,7 +1,6 @@
 @testset ExtendedTestSet "hierarchical_sinkhorn" begin
     
     # Compare results of `sinkhorn!` with hierarchical sinkhorn
-    import Random
     Random.seed!(0)
     M = 100
     N = 101
