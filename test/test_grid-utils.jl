@@ -34,44 +34,6 @@
     @test MOT.get_grid_nodes(X3D, shape3D) == (x,y,z)
 end
 
-@testset ExtendedTestSet "get_discrete_gradient" begin
-    # In 2D
-    nx, ny = 2, 3
-    truegx = [
-        -1 1 0 0 0 0
-        0 0 -1 1 0 0
-        0 0 0 0 -1 1
-    ]
-    truegy = [
-        -1 0 1 0 0 0
-        0 -1 0 1 0 0
-        0 0 -1 0 1 0
-        0 0 0 -1 0 1
-    ]
-    gxt, gyt = MOT.get_discrete_gradient(nx, ny)
-    @test truegx == Array(gxt')
-    @test truegy == Array(gyt')
-
-    # In 3D
-    nz = 2
-    truegx = [
-        truegx              zeros(size(truegx))
-        zeros(size(truegx)) truegx 
-    ]
-    truegy = [
-        truegy              zeros(size(truegy))
-        zeros(size(truegy)) truegy 
-    ]
-
-    D = ones(nx*ny)
-    truegz = spdiagm(nx*ny*(nz-1), nx*ny*nz, 0=>-D, 6=>D)
-
-    gxt, gyt, gzt = MOT.get_discrete_gradient(nx, ny, nz)
-    @test truegx == Array(gxt')
-    @test truegy == Array(gyt')
-    @test truegz == Array(gzt')
-end
-
 @testset ExtendedTestSet "pad_extrapolate" begin
     # Mutating version
     x = [3,2,4.]
