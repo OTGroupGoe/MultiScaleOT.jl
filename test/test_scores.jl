@@ -27,8 +27,8 @@ using SparseArrays
         if ε == 0
             a = -0.5 .*abs.(x)
             P = [Float64(xi*yj > 0)/N for xi in x, yj in y]
-            @test MOT.l1(sum(P, dims=2)[:], μ) == 0
-            @test MOT.l1(sum(P, dims=1)[:], ν) == 0
+            @test MOT.l1(sum(P, dims=2)[:], μ) < 1e-10
+            @test MOT.l1(sum(P, dims=1)[:], ν) < 1e-10
         else
             a = -ε*log.(cosh.(x./(2ε)))
             P = exp.((a .+ b' .- C)/ε).* μ .* ν'

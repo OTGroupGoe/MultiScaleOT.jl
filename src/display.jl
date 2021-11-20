@@ -4,10 +4,14 @@ function Base.show(io::IO, M::GridMeasure{D}) where D
 end
 
 function Base.show(io::IO, M::CloudMeasure{D}) where D
-    print(io, D,"D CloudMeasure with ", length(M.weights)," stored entries in the box ")
-    print("[", M.extents[1][1], ", ", M.extents[1][2], "]")
+    if D == 1
+        print(io, D,"D CloudMeasure with ", length(M.weights)," stored entries in the segment ")
+    else
+        print(io, D,"D CloudMeasure with ", length(M.weights)," stored entries in the box\n   ")
+    end
+    print(io, "[", M.extents[1][1], ", ", M.extents[1][2], "]")
     for i in 2:D
-        print("\n × [", M.extents[i][1], ", ", M.extents[i][2], "]")
+        print(io, " × [", M.extents[i][1], ", ", M.extents[i][2], "]")
     end
 end
 
