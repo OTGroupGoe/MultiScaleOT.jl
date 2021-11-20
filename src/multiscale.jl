@@ -69,6 +69,16 @@ function MultiScaleMeasure(mu::GridMeasure{D}; depth = -1) where D
     return MultiScaleMeasure(depth, measures, refinements)
 end
 
+getindex(M::MultiScaleMeasure, i) = getindex(M.measures, i)
+
+setindex!(M::MultiScaleMeasure, v, i) = setindex!(M.measures, v, i)
+
+firstindex(M) = firstindex(M.measures)
+
+lastindex(M) = lastindex(M.measures)
+
+length(M) = length(M.measures)
+
 """
     refine_support(colptr0, rowval0, refinementX, refinementY)
 

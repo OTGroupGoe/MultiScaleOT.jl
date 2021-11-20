@@ -1,6 +1,6 @@
 module MultiScaleOT
 
-import Base: copy, ==, show
+import Base: copy, ==, show, getindex, setindex, firstindex, lastindex, length
 using SparseArrays
 import Interpolations
 import StructArrays: StructArray
