@@ -4,10 +4,10 @@ import Base: copy, ==, show, getindex, setindex, firstindex, lastindex, length
 using SparseArrays
 import Interpolations
 import StructArrays: StructArray
-import LinearAlgebra: dot, norm, mul!
+import LinearAlgebra: dot, norm, mul!, normalize!
 
 include("aux.jl")
-export l1, l2, l22, lp, lpp, KL, normalize!
+export l1, l2, l22, lp, lpp, KL
 
 include("cells.jl")
 export get_cells
