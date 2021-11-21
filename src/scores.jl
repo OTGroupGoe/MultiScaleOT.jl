@@ -160,10 +160,10 @@ primal_score_dense(P, c, mu, nu, ε) = primal_score_dense(P, c, mu.points, nu.po
 
 dual_score_dense(a, b, c, mu, nu, ε) = dual_score_dense(a, b, c, mu.points, nu.points, mu.weights, nu.weights, ε)
 
-primal_score_sparse(P, c, mu, nu, ε) = primal_score_dense(P, c, mu.points, nu.points, mu.weights, nu.weights, ε)
-
-dual_score_sparse(a, b, c, mu, nu, ε) = dual_score_dense(a, b, c, mu.points, nu.points, mu.weights, nu.weights, ε)
-
 PD_gap_dense(a, b, P, c, mu, nu, ε) = PD_gap_dense(a, b, P, c, mu.points, nu.points, mu.weights, nu.weights, ε)
+
+primal_score_sparse(P, c, mu, nu, ε) = primal_score_sparse(P, c, mu.points, nu.points, mu.weights, nu.weights, ε)
+
+dual_score_sparse(a, b, c, mu, nu, ε, P) = dual_score_sparse(a, b, c, mu.points, nu.points, mu.weights, nu.weights, ε, P)
 
 PD_gap_sparse(a, b, P, c, mu, nu, ε) = PD_gap_sparse(a, b, P, c, mu.points, nu.points, mu.weights, nu.weights, ε)
