@@ -2,7 +2,7 @@
 """
     DEFAULT_PARAMETERS
 
-Default parameters for the Sinkhorn routines
+Default parameters for the multiscale routines
 """
 const DEFAULT_PARAMETERS = (;
     epsilon = 1.0,
@@ -132,6 +132,11 @@ function scaling_schedule(depth::Int, target_value::T, Nsteps::Int, factor::T; l
     return value_schedule
 end
 
+function default_eps_schedule(depth::Int, target_eps; Nsteps = 3, factor = 2., last_iter = Float64[])
+    eps_schedule = scaling_schedule(depth, Float64(target_eps), Nsteps, Float64(factor); last_iter)
+    layer_schedule = template_schedule(depth, fill(1, Nsteps), collect(1:depth); last_iter = fill(depth, length(last_iter)))
+    layer_schedule, eps_schedule
+end
 """
     make_schedule(; nt...) 
 
@@ -158,9 +163,6 @@ julia> sinkhorn_schedule = make_schedule(
 (ε = 1, N = 32, θ = 1.0e-20, max_error = 1.0e-6)
 """
 function make_schedule(; nt...) 
-    # First step: add from DEFAULT_PARAMETERS the ones
-    # that might be missing
-    nt = (; DEFAULT_PARAMETERS..., nt...)
     schedule_length = -1
     # Check consistency of lengths
     needs_expansion = Symbol[]
@@ -185,4 +187,10 @@ function make_schedule(; nt...)
     nt = (; nt..., overwrite_nt...)
     
     return StructArray(; nt...)
+end
+
+function make_multiscale_schedule(; nt...) 
+    # Add from DEFAULT_PARAMETERS the ones that might be missing
+    nt = (; DEFAULT_PARAMETERS..., nt...)
+    make_schedule(; nt...) 
 end

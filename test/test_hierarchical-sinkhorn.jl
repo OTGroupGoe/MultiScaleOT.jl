@@ -53,14 +53,12 @@
     factor = 2.
     eps_target = ε
 
-    eps_schedule = MOT.scaling_schedule(depth, eps_target, Nsteps, factor)
-
-    layer_schedule = MOT.template_schedule(depth, Nsteps, collect(1:depth))
+    layer_schedule, eps_schedule = MOT.default_eps_schedule(depth, eps_target; Nsteps, factor)
 
     θ0 = 1e-15
     θ_schedule = MOT.template_schedule(depth, [0, fill(θ0,Nsteps-1)...], 1.)
 
-    params_schedule = MOT.make_schedule(
+    params_schedule = MOT.make_multiscale_schedule(
                     layer = layer_schedule,
                     epsilon = eps_schedule, 
                     solver_truncation = θ_schedule,
