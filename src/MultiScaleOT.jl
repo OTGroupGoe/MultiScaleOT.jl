@@ -6,7 +6,7 @@ import Interpolations
 import StructArrays: StructArray
 import LinearAlgebra: dot, norm, mul!
 
-include("aux.jl")
+include("auxiliary.jl")
 export l1, l2, l22, lp, lpp, KL, normalize!
 
 include("cells.jl")
