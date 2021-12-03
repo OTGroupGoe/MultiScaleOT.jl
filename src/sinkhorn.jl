@@ -27,7 +27,10 @@ Compute inplace the Gibbs energy of matrix `C`, current duals `a` and `b` and sc
 and `ν`.
 """
 function get_kernel!(C, a, b, μ, ν, ε)
-    C .= μ .* exp.((a .+ b' .- C)./ε) .* ν'
+    # Pointwise exponentiation takes approx ~83% of the time, 
+    # so probably not a lot of room for improvement
+    C .= exp.((a .+ b' .- C)./ε)
+    C .= μ .* C .* ν'
     nothing
 end
 
