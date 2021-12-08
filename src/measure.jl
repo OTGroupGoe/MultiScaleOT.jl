@@ -135,11 +135,53 @@ end
 # TODO, MEDIUM, ENHANCEMENT
 # Support CloudMeasure to the same extent as GridMeasure, with refinement of the alhpas included.
 
-function fine_to_coarse(mu::CloudMeasure{D}, cellsize) where D
-    # Just some ideas here: CloudMeasure{D} should also have a 
+function fine_to_coarse(mu::CloudMeasure{D}, nbins) where D
+    # Just some ideas here: CloudMeasure{D} could also have a 
     # `shape` attribute signaling the number of squares in which
     # we have divide the extent of a finer CloudMeasure to get some
     # discretization. Then, if the CloudMeasure was not the result
     # of this operation, `shape` would be `(-1, -1).`
-    error("not implemented yet.")
+
+    # Cover the case of empty measure
+    if npoints(mu) == 0
+        return deepcopy(mu)
+    end        
+    # Get lower-left and top-right corner
+    a = [ex[1] for ex in mu.extents]
+    b = [ex[2] for ex in mu.extents]
+    a .-= (b.-a)*1e-10 # enlarge box slightly to avoid introducing another box
+    # For each column of X, get the linear index of its box in the 
+    # coarse measure (up to some constant offset)
+    X = mu.points
+    e = nbins.^(0.:D-1)
+    I = [Int(dot(e, ceil.(nbins.*(x.-a)./(b.-a)))) for x in eachcol(X)]
+    # Get permutation that would sort I
+    perm = sortperm(I)
+    # Going in this order, start adding points to the new measure. The weights of a cluster
+    # of points will be their sum, their position will be their euclidean barycenter
+    i = perm[1]
+    current_ind = I[i]
+    new_weights = [mu.weights[i]]
+    new_X = [mu.weights[i].*X[:,i]]
+    cells = [[i]]
+    for k in 2:length(perm)
+        i = perm[k]
+        if I[i] == current_ind
+            new_weights[end] += mu.weights[i]
+            @inbounds new_X[end] .+= @views mu.weights[i].*X[:,i]
+            push!(cells[end], i)
+        else
+            current_ind = I[i]
+            push!(new_weights, mu.weights[i])
+            push!(new_X, @inbounds mu.weights[i]*X[:,i])
+            push!(cells, [i])
+        end
+    end
+    # Build new points matrix
+    new_points = hcat(new_X...)
+    new_points ./= new_weights'
+    # Extents theoretically remain unaltered, however our way to compute the barycenter 
+    # leads to a small error. So we let the constructor of CloudMeasure compute 
+    # the nex extents; if this is not good enough we can revisit it at a later moment.
+    return CloudMeasure(new_points, new_weights), cells
 end

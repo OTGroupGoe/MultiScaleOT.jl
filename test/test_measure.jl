@@ -128,4 +128,25 @@ end
     # TODO: 3D test?
 end
 
-# TODO: coarse_to_fine CloudMeasure
+@testset ExtendedTestSet "fine_to_coarse(<:CloudMeasure)" begin
+    for D in [1,2,3]
+        N = 100
+        # Generate D-dimensional CloudMeasure
+        X = rand(D, N)
+        w = rand(N)
+        mu = CloudMeasure(X, w)
+        nbins = 4
+        mu2, cells = MOT.fine_to_coarse(mu, nbins)
+        test_w = true # Test weights of coarse measure
+        test_X = true # Test points of coarse measure
+        test_dist = true # Test that the points are actually clustered
+        for (i, cell) in enumerate(cells)
+            test_w &= (mu2.weights[i] ≈ sum(mu.weights[cell]))
+            test_X &= all(mu2.points[:,i] .≈ MOT.euclidean_barycenter(mu.points[:,cell], mu.weights[cell]./mu2.weights[i]))    
+            test_dist &= all(MOT.l1(mu2.points[:,i], mu.points[:,j])≤ D/nbins for j in cell)
+        end
+        @test test_w
+        @test test_X
+        @test test_dist
+    end
+end

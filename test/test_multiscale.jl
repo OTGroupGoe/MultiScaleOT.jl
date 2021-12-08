@@ -39,6 +39,32 @@ using SparseArrays
         MS_mui = MS_mu.measures[i]
         @test (MS_mui.points == mui.points) & (MS_mui.weights == mui.weights) & (MS_mui.gridshape == mui.gridshape)
     end
+
+    # For CloudMeasure
+
+    function is_refinement(mu::CloudMeasure{D}, new_mu::CloudMeasure, cells, cluster_side) where D
+        ref = true
+        for (i, cell) in enumerate(cells)
+            ref &= (new_mu.weights[i] ≈ sum(mu.weights[cell]))
+            ref &= all(new_mu.points[:,i] .≈ MOT.euclidean_barycenter(mu.points[:,cell], mu.weights[cell]./new_mu.weights[i]))    
+            ref &= all(MOT.l1(new_mu.points[:,i], mu.points[:,j])≤ D*cluster_side for j in cell)
+        end
+        ref
+    end
+
+    for D in [1,2,3]
+        N = 1000
+        # Generate D-dimensional CloudMeasure
+        X = rand(D, N)
+        w = rand(N)
+        mu = CloudMeasure(X, w)
+        @test_throws ErrorException MOT.MultiScaleMeasure(mu)  # must provide depth
+        depth = 5
+        muH = MOT.MultiScaleMeasure(mu; depth) 
+        for i in 1:depth-1
+            @test is_refinement(muH[i+1], muH[i], muH.refinements[i], 1/2^(i-1))
+        end
+    end
 end
 
 

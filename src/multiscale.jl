@@ -69,6 +69,23 @@ function MultiScaleMeasure(mu::GridMeasure{D}; depth = -1) where D
     return MultiScaleMeasure(depth, measures, refinements)
 end
 
+function MultiScaleMeasure(mu::CloudMeasure{D}; depth = -1) where D
+    depth == -1 && error("must provide depth")
+    isa(depth, Int) || error("depth must be of type Int")
+    measures = [mu]
+    
+    # Refine original measure until final layer
+    refinements = Vector{Vector{Int}}[]
+    for i in 1:depth-1
+        nbins = 2^(depth-1-i) # for last i, nbins = 1
+        new_mu, cells = fine_to_coarse(mu, nbins)
+        pushfirst!(measures, new_mu)
+        pushfirst!(refinements, cells)
+        mu = new_mu
+    end
+    return MultiScaleMeasure(depth, measures, refinements)
+end
+
 getindex(M::MultiScaleMeasure, i) = getindex(M.measures, i)
 
 setindex!(M::MultiScaleMeasure, v, i) = setindex!(M.measures, v, i)
