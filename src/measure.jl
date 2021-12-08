@@ -100,6 +100,11 @@ mutable struct CloudMeasure{D} <: AbstractMeasure{D}
         new{D}(points, weights, extents)
     end
 
+    function CloudMeasure(points, weights, extents::NTuple{D, Tuple{Number, Number}}) where D
+        extents_float = convert.(NTuple{2, Float64}, extents)
+        new{D}(points, weights, extents_float)
+    end
+
     function CloudMeasure(points, weights)
         D = size(points, 1)
         extents = Tuple(extrema(r) for r in eachrow(points))::NTuple{D, Tuple{Float64, Float64}}
